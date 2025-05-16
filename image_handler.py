@@ -33,9 +33,9 @@ def resize_image(image_path, target_height=20, target_width=None):
         aspect_ratio = width / height
         
         if target_width is None:
-            # Increase width multiplier to prevent compression
-            # Using 1.0 to maintain the actual aspect ratio
-            target_width = int(target_height * aspect_ratio * 1.0)
+            # Terminal characters are typically taller than they are wide
+            # Using a factor of 0.5 to account for character aspect ratio in terminals
+            target_width = int(target_height * aspect_ratio * 0.5)
         
         # Resize the image with high quality
         img = img.resize((target_width, target_height), Image.LANCZOS)
@@ -55,28 +55,59 @@ def image_to_ansi(image_path, height=20):
     """
     Convert an image to ANSI escape codes for terminal display.
     Returns a list of strings, each representing a line of the image.
+    Uses half-block characters for higher resolution display.
     """
     terminal_width, terminal_height = get_terminal_size()
-    img = resize_image(image_path, target_height=height, target_width=None)
+    
+    # Calculate maximum width based on terminal size (leaving room for text)
+    # Use approximately 40% of terminal width for the image
+    max_width = int(terminal_width * 0.4)
+    
+    # Double the target height since we'll use half-blocks (2 pixels per character height)
+    effective_height = height * 2
+    img = resize_image(image_path, target_height=effective_height, target_width=None)
     
     if img is None:
         return []
+    
+    # Check if image width exceeds our calculated max width
+    width, height = img.size
+    if width > max_width:
+        # Recalculate the height to maintain aspect ratio
+        aspect_ratio = width / height
+        new_height = int(max_width / aspect_ratio)
+        # Ensure new_height is even for the half-block rendering
+        if new_height % 2 != 0:
+            new_height += 1
+        img = resize_image(image_path, target_height=new_height, target_width=max_width)
+        width, height = img.size
     
     # Convert to RGB if needed
     if img.mode != 'RGB':
         img = img.convert('RGB')
     
     lines = []
-    width, height = img.size
     pixels = img.load()
     
-    # Use full block character for a more grainy effect
-    for y in range(height):
+    # Use half-block characters for higher resolution
+    # Process two rows at a time (upper and lower half of a character cell)
+    for y in range(0, height, 2):
         line = ""
         for x in range(width):
-            r, g, b = pixels[x, y]
-            # Using full block character for a more grainy appearance
-            line += f"{rgb_to_ansi(r, g, b)}█{RESET}"
+            # Get upper pixel color
+            r_upper, g_upper, b_upper = pixels[x, y]
+            
+            # Get lower pixel color (if within bounds)
+            if y + 1 < height:
+                r_lower, g_lower, b_lower = pixels[x, y + 1]
+            else:
+                # If at the edge, use the same color
+                r_lower, g_lower, b_lower = r_upper, g_upper, b_upper
+            
+            # Upper half uses foreground color, lower half uses background color
+            # Using '▀' character (upper half block)
+            line += f"{rgb_to_ansi(r_upper, g_upper, b_upper)}{rgb_to_ansi(r_lower, g_lower, b_lower, bg=True)}▀{RESET}"
+        
         lines.append(line)
     
     return lines

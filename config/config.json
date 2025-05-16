@@ -1,9 +1,9 @@
 {
     "display_type": "image",
     "image": "rei.jpg",
-    "ascii_art": "ewi",
+    "ascii_art": "lain",
     "theme": "default",
-    "image_height": 100,
+    "image_height": 50,
     "info_display": [
         "os",
         "hostname",
