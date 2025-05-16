@@ -182,29 +182,31 @@ def get_font():
 def get_cpu_info():
     """Get CPU information."""
     try:
-        cpu_info = subprocess.check_output('powershell -command "Get-WmiObject -Class Win32_Processor | Select-Object -Property Name, NumberOfCores, NumberOfLogicalProcessors | Format-List"', 
-                                        shell=True).decode().strip()
+        # Try using WMI to get CPU info
+        w = wmi.WMI()
+        cpu = w.Win32_Processor()[0]
+        cpu_name = cpu.Name.strip()
         
-        name_match = re.search(r'Name\s*:\s*(.+)', cpu_info)
-        cores_match = re.search(r'NumberOfCores\s*:\s*(\d+)', cpu_info)
-        threads_match = re.search(r'NumberOfLogicalProcessors\s*:\s*(\d+)', cpu_info)
-        
-        cpu_name = name_match.group(1) if name_match else "Unknown CPU"
-        cores = cores_match.group(1) if cores_match else "?"
-        threads = threads_match.group(1) if threads_match else "?"
+        # Clean up CPU name - remove excessive spaces
+        cpu_name = re.sub(r'\s+', ' ', cpu_name)
         
         # Try to get CPU frequency
         try:
-            cpu_freq = psutil.cpu_freq()
-            if cpu_freq and cpu_freq.current:
-                freq = f" @ {cpu_freq.current/1000:.2f}GHz"
-            else:
-                freq = ""
+            freq = f" @ {round(cpu.MaxClockSpeed/1000, 2)}GHz"
         except:
             freq = ""
         
-        return f"CPU: {cpu_name}{freq} ({cores}C/{threads}T)"
+        # Get core/thread counts
+        try:
+            cores = cpu.NumberOfCores
+            threads = cpu.NumberOfLogicalProcessors
+            cores_threads = f" ({cores}C/{threads}T)"
+        except:
+            cores_threads = ""
+        
+        return f"CPU: {cpu_name}{freq}{cores_threads}"
     except:
+        # Fallback to basic platform info
         return f"CPU: {platform.processor()}"
 
 def get_gpu_info():
@@ -283,4 +285,12 @@ def get_all_info():
         "gpu": get_gpu_info(),
         "memory": get_memory_info(),
         "disk": get_disk_info()
-    } 
+    }
+
+def safe_get(func, fallback="Unknown"):
+    """Safely call a function with fallback for exceptions."""
+    try:
+        return func()
+    except Exception as e:
+        print(f"Warning: {e}")
+        return fallback 

@@ -14,5 +14,5 @@ llllllllllllll  lllllllllllllllllll
 llllllllllllll  lllllllllllllllllll
 llllllllllllll  lllllllllllllllllll
 `'ccllllllllll  lllllllllllllllllll
-      `' \\*::  :ccllllllllllllllll
-                       ````''*::cll 
+      `' \*::  :ccllllllllllllllll
+                       ````''*::cll

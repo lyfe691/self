@@ -51,10 +51,20 @@ def load_ascii_art(art_name):
     """Load ASCII art template."""
     art_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ascii", f"{art_name}.txt")
     try:
-        with open(art_path, 'r') as f:
+        with open(art_path, 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
         # Fallback to a simple ASCII art
+        return """
+        ################
+        ##            ##
+        ##  Windows   ##
+        ##            ##
+        ################
+        """
+    except UnicodeDecodeError:
+        # Fallback if we have encoding issues
+        print(f"Warning: Encoding issue with ASCII art file: {art_path}")
         return """
         ################
         ##            ##
