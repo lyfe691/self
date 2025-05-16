@@ -24,6 +24,10 @@ def resize_image(image_path, target_height=20, target_width=None):
     """
     Resize an image to fit the terminal dimensions.
     Returns the PIL Image object.
+    
+    Parameters:
+    - target_height: Target height in pixels
+    - target_width: Target width in pixels (None = auto-calculate based on aspect ratio)
     """
     try:
         img = Image.open(image_path)
@@ -51,36 +55,49 @@ def rgb_to_ansi(r, g, b, bg=False):
     else:
         return f'\033[38;2;{r};{g};{b}m'
 
-def image_to_ansi(image_path, height=20):
+def image_to_ansi(image_path, height=20, width=None):
     """
     Convert an image to ANSI escape codes for terminal display.
     Returns a list of strings, each representing a line of the image.
     Uses half-block characters for higher resolution display.
+    
+    Parameters:
+    - height: Target height in terminal rows
+    - width: Target width in terminal columns (None = auto-calculate)
     """
     terminal_width, terminal_height = get_terminal_size()
     
+    # Handle square image case explicitly (equal height and width)
+    is_square = (width is not None and height == width)
+    if is_square:
+        # For a truly square appearance, we need to adjust for terminal character aspect ratio
+        # Terminal characters are roughly twice as tall as wide
+        width = width * 2
+    
     # Calculate maximum width based on terminal size (leaving room for text)
-    # Use approximately 40% of terminal width for the image
-    max_width = int(terminal_width * 0.4)
+    # Use approximately 40% of terminal width for the image if no width specified
+    max_width = width if width is not None else int(terminal_width * 0.4)
     
     # Double the target height since we'll use half-blocks (2 pixels per character height)
     effective_height = height * 2
-    img = resize_image(image_path, target_height=effective_height, target_width=None)
+    
+    # Resize the image
+    img = resize_image(image_path, target_height=effective_height, target_width=width)
     
     if img is None:
         return []
     
-    # Check if image width exceeds our calculated max width
-    width, height = img.size
-    if width > max_width:
+    # Check if image width exceeds our calculated max width (only if width wasn't specified)
+    img_width, img_height = img.size
+    if width is None and img_width > max_width:
         # Recalculate the height to maintain aspect ratio
-        aspect_ratio = width / height
+        aspect_ratio = img_width / img_height
         new_height = int(max_width / aspect_ratio)
         # Ensure new_height is even for the half-block rendering
         if new_height % 2 != 0:
             new_height += 1
         img = resize_image(image_path, target_height=new_height, target_width=max_width)
-        width, height = img.size
+        img_width, img_height = img.size
     
     # Convert to RGB if needed
     if img.mode != 'RGB':
@@ -91,14 +108,14 @@ def image_to_ansi(image_path, height=20):
     
     # Use half-block characters for higher resolution
     # Process two rows at a time (upper and lower half of a character cell)
-    for y in range(0, height, 2):
+    for y in range(0, img_height, 2):
         line = ""
-        for x in range(width):
+        for x in range(img_width):
             # Get upper pixel color
             r_upper, g_upper, b_upper = pixels[x, y]
             
             # Get lower pixel color (if within bounds)
-            if y + 1 < height:
+            if y + 1 < img_height:
                 r_lower, g_lower, b_lower = pixels[x, y + 1]
             else:
                 # If at the edge, use the same color

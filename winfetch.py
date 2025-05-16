@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--config", help="Path to custom config file")
     parser.add_argument("--setup", action="store_true", help="Run interactive setup to create config file")
     parser.add_argument("--height", type=int, help="Override height of the displayed image")
+    parser.add_argument("--width", type=int, help="Override width of the displayed image")
     parser.add_argument("--version", action="store_true", help="Show version information")
     return parser.parse_args()
 
@@ -40,6 +41,7 @@ def load_config(config_path=None):
             "ascii_art": "windows",  # Default ASCII art
             "theme": "blue",  # Default theme
             "image_height": 20,  # Default image height
+            "image_width": None,  # Default image width (None = auto-calculate based on aspect ratio)
             "info_display": [
                 "os", "hostname", "kernel", "uptime", "packages", 
                 "shell", "resolution", "wm", "theme", "terminal", 
@@ -142,12 +144,13 @@ def display_winfetch(display_type, art_source, system_info, config):
     # Prepare left side content (ASCII art or image)
     left_content = []
     image_height = config.get("image_height", 20)
+    image_width = config.get("image_width", None)
     
     if display_type == "image":
         image_path = get_image_path(art_source)
         if image_path:
             # Render image directly without sharpening
-            left_content = image_to_ansi(image_path, height=image_height)
+            left_content = image_to_ansi(image_path, height=image_height, width=image_width)
         else:
             # Fallback to ASCII if image not found
             left_content = load_ascii_art("windows").split('\n')
@@ -287,6 +290,18 @@ def setup_wizard():
             config["image_height"] = int(height_choice)
         except:
             config["image_height"] = 20
+            
+        print(f"\n{Fore.YELLOW}Image Width:{Style.RESET_ALL}")
+        print("Enter a width value or leave empty for auto-calculation based on aspect ratio")
+        print("Recommended: leave empty or 30-60 for best results")
+        width_choice = input("Enter image width (default: auto): ").strip()
+        if width_choice:
+            try:
+                config["image_width"] = int(width_choice)
+            except:
+                config["image_width"] = None
+        else:
+            config["image_width"] = None
     print()
     
     # Save configuration
@@ -321,6 +336,8 @@ def main():
     # Override config with command line args if provided
     if args.height:
         config["image_height"] = args.height
+    if args.width:
+        config["image_width"] = args.width
     
     # Load display content (ASCII art or image path)
     display_type = config.get("display_type", "ascii")

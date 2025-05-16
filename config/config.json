@@ -3,7 +3,7 @@
     "image": "rei.jpg",
     "ascii_art": "lain",
     "theme": "default",
-    "image_height": 50,
+    "image_height": 30,
     "info_display": [
         "os",
         "hostname",
@@ -31,5 +31,6 @@
         "show_package_managers": true,
         "show_cpu_details": true,
         "show_gpu_details": true
-    }
+    },
+    "image_width": 30
 }
