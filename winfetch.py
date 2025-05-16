@@ -36,7 +36,7 @@ def load_config(config_path=None):
         print("Using default configuration.")
         return {
             "display_type": "image",  # "image" or "ascii"
-            "image": "windows_logo.png",  # Default image
+            "image": "rei.jpg",  # Default image
             "ascii_art": "windows",  # Default ASCII art
             "theme": "blue",  # Default theme
             "image_height": 20,  # Default image height
@@ -123,7 +123,7 @@ def display_winfetch(display_type, art_source, system_info, config):
     """Display the fetched information with ASCII art or image."""
     # Import modules
     import color_themes
-    from image_handler import image_to_ansi, get_image_path, sharpen_image
+    from image_handler import image_to_ansi, get_image_path
     
     # Get theme
     theme_name = config.get("theme", "default")
@@ -146,9 +146,8 @@ def display_winfetch(display_type, art_source, system_info, config):
     if display_type == "image":
         image_path = get_image_path(art_source)
         if image_path:
-            # Apply sharpening filter for better quality
-            enhanced_path = sharpen_image(image_path)
-            left_content = image_to_ansi(enhanced_path, height=image_height)
+            # Render image directly without sharpening
+            left_content = image_to_ansi(image_path, height=image_height)
         else:
             # Fallback to ASCII if image not found
             left_content = load_ascii_art("windows").split('\n')
@@ -241,7 +240,7 @@ def setup_wizard():
         else:
             print("No images found in images directory.")
             print("Please place images in the 'images' directory and run setup again.")
-            config["image"] = "windows_logo.png"  # Default fallback
+            config["image"] = "rei.jpg"  # Default fallback
     else:
         # ASCII art selection
         ascii_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ascii")

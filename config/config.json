@@ -1,9 +1,9 @@
 {
     "display_type": "image",
-    "image": "windows_logo.png",
+    "image": "rei.jpg",
     "ascii_art": "windows",
-    "theme": "blue",
-    "image_height": 22,
+    "theme": "magenta",
+    "image_height": 20,
     "info_display": [
         "os",
         "hostname",
@@ -32,4 +32,4 @@
         "show_cpu_details": true,
         "show_gpu_details": true
     }
-} 
+}

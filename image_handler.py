@@ -33,10 +33,9 @@ def resize_image(image_path, target_height=20, target_width=None):
         aspect_ratio = width / height
         
         if target_width is None:
-            # Calculate width based on height and aspect ratio
-            # Using 0.45 instead of 0.5 to account for terminal character aspect ratio
-            # This produces less stretched images with better clarity
-            target_width = int(target_height * aspect_ratio * 0.45)
+            # Increase width multiplier to prevent compression
+            # Using 1.0 to maintain the actual aspect ratio
+            target_width = int(target_height * aspect_ratio * 1.0)
         
         # Resize the image with high quality
         img = img.resize((target_width, target_height), Image.LANCZOS)
@@ -71,14 +70,13 @@ def image_to_ansi(image_path, height=20):
     width, height = img.size
     pixels = img.load()
     
-    # Use a single space with background color instead of two spaces
-    # This improves image clarity by making pixels less stretched
+    # Use full block character for a more grainy effect
     for y in range(height):
         line = ""
         for x in range(width):
             r, g, b = pixels[x, y]
-            # Using a single character with double width works better for image quality
-            line += f"{rgb_to_ansi(r, g, b, bg=True)} {RESET}"
+            # Using full block character for a more grainy appearance
+            line += f"{rgb_to_ansi(r, g, b)}█{RESET}"
         lines.append(line)
     
     return lines
