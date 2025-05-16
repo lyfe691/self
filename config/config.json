@@ -1,9 +1,9 @@
 {
     "display_type": "image",
-    "image": "reia.jpg",
-    "ascii_art": "mkma",
+    "image": "\u0410\u044f\u043d\u0430\u043c\u0438 \u0420\u0435\u0439 \u0432 \u0445\u043e\u0440\u043e\u0448\u0435\u043c \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0435.jpg",
+    "ascii_art": "totoro_small",
     "theme": "default",
-    "image_height": 36,
+    "image_height": 33,
     "info_display": [
         "os",
         "hostname",
@@ -32,5 +32,5 @@
         "show_cpu_details": true,
         "show_gpu_details": true
     },
-    "image_width": 36
+    "image_width": 33
 }
