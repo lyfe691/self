@@ -1,5 +1,5 @@
 """
-windows system information module for winfetch
+windows system information module for self
 """
 
 import os

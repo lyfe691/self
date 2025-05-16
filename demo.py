@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-winfetch demo script
-shows different ways to use winfetch
+self demo script
+shows different ways to use self
 """
 
 import os
@@ -43,34 +43,34 @@ def run_command(command, wait=True):
 def main():
     """Main demo function."""
     clear_screen()
-    print_header("Welcome to WinFetch Demo")
+    print_header("Welcome to self Demo")
     
-    print("This demo will show you how to use WinFetch.")
+    print("This demo will show you how to use self.")
     print("Make sure you have installed the required dependencies:")
     print(Fore.YELLOW + "pip install -r requirements.txt" + Style.RESET_ALL)
     print()
     input("Press Enter to start the demo...")
     
-    # Demo 1: Basic WinFetch
+    # Demo 1: Basic self
     clear_screen()
-    print_header("Basic WinFetch")
-    run_command("python winfetch.py")
+    print_header("Basic self")
+    run_command("python self.py")
     
     # Demo 2: Setup Configuration
     clear_screen()
     print_header("Setup Wizard")
-    print("The setup wizard lets you configure WinFetch interactively.")
-    print("It's the easiest way to customize WinFetch.")
+    print("The setup wizard lets you configure self interactively.")
+    print("It's the easiest way to customize self.")
     print()
     print("We won't run it as part of this demo, but you can try it with:")
-    print(Fore.YELLOW + "python winfetch.py --setup" + Style.RESET_ALL)
+    print(Fore.YELLOW + "python self.py --setup" + Style.RESET_ALL)
     print()
     input("Press Enter to continue...")
     
     # Demo 3: Config File
     clear_screen()
     print_header("Configuration File")
-    print("WinFetch is primarily configured through the config.json file.")
+    print("self is primarily configured through the config.json file.")
     print(f"Location: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'config.json')}")
     print()
     print("You can edit this file to customize:")
@@ -80,8 +80,8 @@ def main():
     print("- Image height")
     print("- Information displayed")
     print()
-    print("After editing, just run WinFetch normally:")
-    print(Fore.YELLOW + "python winfetch.py" + Style.RESET_ALL)
+    print("After editing, just run self normally:")
+    print(Fore.YELLOW + "python self.py" + Style.RESET_ALL)
     print()
     
     # Final notes
@@ -103,15 +103,15 @@ def main():
     # Final screen
     clear_screen()
     print_header("Demo Complete")
-    print("You've learned how to use WinFetch!")
+    print("You've learned how to use self!")
     print()
     print("Basic usage:")
-    print(Fore.YELLOW + "python winfetch.py" + Style.RESET_ALL)
+    print(Fore.YELLOW + "python self.py" + Style.RESET_ALL)
     print()
     print("Run setup wizard:")
-    print(Fore.YELLOW + "python winfetch.py --setup" + Style.RESET_ALL)
+    print(Fore.YELLOW + "python self.py --setup" + Style.RESET_ALL)
     print()
-    print("Thank you for trying WinFetch!")
+    print("Thank you for trying self!")
     print()
 
 if __name__ == "__main__":

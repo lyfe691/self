@@ -1,5 +1,5 @@
 """
-image handling module for winfetch
+image handling module for self
 """
 
 import os

@@ -24,7 +24,7 @@ CACHE_TIMEOUT = 300 # 5 min
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="WinFetch - System info tool for Windows")
+    parser = argparse.ArgumentParser(description="self - System info tool for Windows")
     parser.add_argument("--config", help="Path to custom config file")
     parser.add_argument("--setup", action="store_true", help="Run interactive setup to create config file")
     parser.add_argument("--height", type=int, help="Override height of the displayed image")
@@ -156,7 +156,7 @@ def get_terminal_width():
     except:
         return 80  # default width
 
-def display_winfetch(display_type, art_source, system_info, config, execution_time=None):
+def display_self(display_type, art_source, system_info, config, execution_time=None):
     """Display the fetched information with ASCII art or image."""
     # import modules
     import color_themes
@@ -285,9 +285,9 @@ def setup_wizard():
     import image_handler
     import os
     
-    print(f"{Fore.CYAN}WinFetch Setup Wizard{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}self Setup Wizard{Style.RESET_ALL}")
     print("-----------------")
-    print("This wizard will help you create a custom configuration for WinFetch.\n")
+    print("This wizard will help you create a custom configuration for self.\n")
     
     # Default config
     config = load_config()
@@ -392,14 +392,14 @@ def setup_wizard():
         json.dump(config, f, indent=4)
     
     print(f"{Fore.GREEN}Configuration saved to {config_path}{Style.RESET_ALL}")
-    print(f"Run WinFetch with 'python winfetch.py' to see your changes.\n")
+    print(f"Run self with 'python self.py' to see your changes.\n")
 
 def main():
     """Main function."""
     args = parse_args()
     
     if args.version:
-        print("WinFetch v1.0.0")
+        print("self v1.0.0")
         return
     
     if args.setup:
@@ -425,7 +425,7 @@ def main():
         
         # simple debug display
         print("=" * 40)
-        print("WINFETCH DEBUG MODE")
+        print("self DEBUG MODE")
         print("=" * 40)
         
         # print system info directly
@@ -478,7 +478,7 @@ def main():
     # calculate execution time
     execution_time = time.time() - start_time
     
-    display_winfetch(
+    display_self(
         display_type=display_type,
         art_source=art_source,
         system_info=system_info,
