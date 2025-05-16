@@ -1,9 +1,9 @@
 {
     "display_type": "image",
-    "image": "rei.jpg",
+    "image": "reia.jpg",
     "ascii_art": "mkma",
     "theme": "default",
-    "image_height": 26,
+    "image_height": 36,
     "info_display": [
         "os",
         "hostname",
@@ -32,5 +32,5 @@
         "show_cpu_details": true,
         "show_gpu_details": true
     },
-    "image_width": 26
+    "image_width": 36
 }
