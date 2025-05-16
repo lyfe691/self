@@ -3,6 +3,7 @@
     "image": "windows_logo.png",
     "ascii_art": "windows",
     "theme": "blue",
+    "image_height": 22,
     "info_display": [
         "os",
         "hostname",

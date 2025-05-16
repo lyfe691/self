@@ -45,7 +45,7 @@ def main():
     clear_screen()
     print_header("Welcome to WinFetch Demo")
     
-    print("This demo will show you different ways to use WinFetch.")
+    print("This demo will show you how to use WinFetch.")
     print("Make sure you have installed the required dependencies:")
     print(Fore.YELLOW + "pip install -r requirements.txt" + Style.RESET_ALL)
     print()
@@ -56,46 +56,60 @@ def main():
     print_header("Basic WinFetch")
     run_command("python winfetch.py")
     
-    # Demo 2: Different ASCII art
+    # Demo 2: Setup Configuration
     clear_screen()
-    print_header("WinFetch with different ASCII art")
-    run_command("python winfetch.py --ascii powershell")
-    
-    # Demo 3: Different theme
-    clear_screen()
-    print_header("WinFetch with different theme")
-    run_command("python winfetch.py --theme magenta")
-    
-    # Demo 4: List available ASCII art
-    clear_screen()
-    print_header("List Available ASCII Art")
-    run_command("python winfetch.py --list-ascii", wait=False)
-    
+    print_header("Setup Wizard")
+    print("The setup wizard lets you configure WinFetch interactively.")
+    print("It's the easiest way to customize WinFetch.")
     print()
-    print_header("List Available Themes")
-    run_command("python winfetch.py --list-themes")
-    
-    # Demo 5: List available images
-    clear_screen()
-    print_header("List Available Images")
-    run_command("python winfetch.py --list-images", wait=False)
-    
-    print()
-    print("To add custom images, place them in the 'images' directory.")
-    print("Supported formats: PNG, JPG/JPEG, BMP, GIF.")
+    print("We won't run it as part of this demo, but you can try it with:")
+    print(Fore.YELLOW + "python winfetch.py --setup" + Style.RESET_ALL)
     print()
     input("Press Enter to continue...")
     
+    # Demo 3: Config File
+    clear_screen()
+    print_header("Configuration File")
+    print("WinFetch is primarily configured through the config.json file.")
+    print(f"Location: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'config.json')}")
+    print()
+    print("You can edit this file to customize:")
+    print("- Display type (image or ASCII art)")
+    print("- Image file or ASCII art selection")
+    print("- Color theme")
+    print("- Image height")
+    print("- Information displayed")
+    print()
+    print("After editing, just run WinFetch normally:")
+    print(Fore.YELLOW + "python winfetch.py" + Style.RESET_ALL)
+    print()
+    
     # Final notes
     clear_screen()
+    print_header("Tips for Best Results")
+    print("1. Place your preferred images in the 'images' directory")
+    print("2. For best image quality, try images with:")
+    print("   - Clear subjects with good contrast")
+    print("   - Simple backgrounds")
+    print("   - Height around 400-800 pixels")
+    print()
+    print("3. Adjust image height in the config file for best results")
+    print("   Recommended: 18-25 lines for most terminal sizes")
+    print()
+    print("4. Experiment with different color themes")
+    print()
+    input("Press Enter to finish the demo...")
+    
+    # Final screen
+    clear_screen()
     print_header("Demo Complete")
-    print("You've seen the basic features of WinFetch!")
+    print("You've learned how to use WinFetch!")
     print()
-    print("For more customization, edit the config file:")
-    print(Fore.YELLOW + "config/config.json" + Style.RESET_ALL)
+    print("Basic usage:")
+    print(Fore.YELLOW + "python winfetch.py" + Style.RESET_ALL)
     print()
-    print("Run with custom options:")
-    print(Fore.YELLOW + "python winfetch.py --image myimage.jpg --theme red" + Style.RESET_ALL)
+    print("Run setup wizard:")
+    print(Fore.YELLOW + "python winfetch.py --setup" + Style.RESET_ALL)
     print()
     print("Thank you for trying WinFetch!")
     print()

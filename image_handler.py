@@ -34,9 +34,11 @@ def resize_image(image_path, target_height=20, target_width=None):
         
         if target_width is None:
             # Calculate width based on height and aspect ratio
-            target_width = int(target_height * aspect_ratio * 0.5)  # * 0.5 to account for terminal character aspect ratio
+            # Using 0.45 instead of 0.5 to account for terminal character aspect ratio
+            # This produces less stretched images with better clarity
+            target_width = int(target_height * aspect_ratio * 0.45)
         
-        # Resize the image
+        # Resize the image with high quality
         img = img.resize((target_width, target_height), Image.LANCZOS)
         return img
     except Exception as e:
@@ -69,14 +71,39 @@ def image_to_ansi(image_path, height=20):
     width, height = img.size
     pixels = img.load()
     
+    # Use a single space with background color instead of two spaces
+    # This improves image clarity by making pixels less stretched
     for y in range(height):
         line = ""
         for x in range(width):
             r, g, b = pixels[x, y]
-            line += f"{rgb_to_ansi(r, g, b, bg=True)}  {RESET}"
+            # Using a single character with double width works better for image quality
+            line += f"{rgb_to_ansi(r, g, b, bg=True)} {RESET}"
         lines.append(line)
     
     return lines
+
+def sharpen_image(image_path):
+    """Apply sharpening filter to improve image clarity."""
+    try:
+        from PIL import ImageEnhance, ImageFilter
+        
+        img = Image.open(image_path)
+        # Apply a slight sharpening filter
+        enhancer = ImageEnhance.Sharpness(img)
+        img = enhancer.enhance(1.5)  # Enhance sharpness by 1.5x
+        
+        # Also apply a slight contrast adjustment
+        enhancer = ImageEnhance.Contrast(img)
+        img = enhancer.enhance(1.2)  # Enhance contrast by 1.2x
+        
+        # Save to a temporary file
+        temp_path = os.path.join(os.path.dirname(image_path), "temp_" + os.path.basename(image_path))
+        img.save(temp_path)
+        return temp_path
+    except Exception as e:
+        print(f"Warning: Could not enhance image: {e}")
+        return image_path
 
 def get_images_dir():
     """Get the path to the images directory."""

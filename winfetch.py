@@ -18,13 +18,9 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="WinFetch - System info tool for Windows")
     parser.add_argument("--config", help="Path to custom config file")
-    parser.add_argument("--ascii", help="Path to custom ASCII template")
-    parser.add_argument("--image", help="Path to image or name of image in the images directory")
-    parser.add_argument("--theme", help="Color theme (default, powershell, windows, red, green, magenta, etc.)")
-    parser.add_argument("--list-themes", action="store_true", help="List available color themes")
-    parser.add_argument("--list-ascii", action="store_true", help="List available ASCII art templates")
-    parser.add_argument("--list-images", action="store_true", help="List available images")
-    parser.add_argument("--height", type=int, default=20, help="Height of the displayed image (default: 20 lines)")
+    parser.add_argument("--setup", action="store_true", help="Run interactive setup to create config file")
+    parser.add_argument("--height", type=int, help="Override height of the displayed image")
+    parser.add_argument("--version", action="store_true", help="Show version information")
     return parser.parse_args()
 
 def load_config(config_path=None):
@@ -43,9 +39,11 @@ def load_config(config_path=None):
             "image": "windows_logo.png",  # Default image
             "ascii_art": "windows",  # Default ASCII art
             "theme": "blue",  # Default theme
+            "image_height": 20,  # Default image height
             "info_display": [
                 "os", "hostname", "kernel", "uptime", "packages", 
-                "shell", "resolution", "wm", "theme", "cpu", "memory", "disk"
+                "shell", "resolution", "wm", "theme", "terminal", 
+                "font", "cpu", "gpu", "memory", "disk"
             ]
         }
 
@@ -111,11 +109,11 @@ def get_terminal_width():
     except:
         return 80  # Default width
 
-def display_winfetch(display_type, art_source, system_info, config, image_height=20):
+def display_winfetch(display_type, art_source, system_info, config):
     """Display the fetched information with ASCII art or image."""
     # Import modules
     import color_themes
-    from image_handler import image_to_ansi, get_image_path
+    from image_handler import image_to_ansi, get_image_path, sharpen_image
     
     # Get theme
     theme_name = config.get("theme", "default")
@@ -129,14 +127,18 @@ def display_winfetch(display_type, art_source, system_info, config, image_height
     import platform
     username = os.environ.get("USERNAME", "user")
     hostname = platform.node()
-    title = f"{username}@{hostname}"
+    user_host = f"{username}@{hostname}"
     
     # Prepare left side content (ASCII art or image)
     left_content = []
+    image_height = config.get("image_height", 20)
+    
     if display_type == "image":
         image_path = get_image_path(art_source)
         if image_path:
-            left_content = image_to_ansi(image_path, height=image_height)
+            # Apply sharpening filter for better quality
+            enhanced_path = sharpen_image(image_path)
+            left_content = image_to_ansi(enhanced_path, height=image_height)
         else:
             # Fallback to ASCII if image not found
             left_content = load_ascii_art("windows").split('\n')
@@ -146,6 +148,12 @@ def display_winfetch(display_type, art_source, system_info, config, image_height
     
     # Apply color to info text
     info_list = []
+    
+    # Add username@hostname at the top of the info section
+    info_list.append(f"{theme['title']}{user_host}{Style.RESET_ALL}")
+    info_list.append(f"{theme['title']}{'-' * len(user_host)}{Style.RESET_ALL}")
+    info_list.append("")  # Empty line after the title
+    
     for key in config["info_display"]:
         if key in system_info:
             info_text = system_info[key]
@@ -159,18 +167,14 @@ def display_winfetch(display_type, art_source, system_info, config, image_height
     # Spacing between sections
     spacing = 4
     
-    # Clear screen and reset cursor
+    # Clear screen
     print("\033[H\033[J", end="")
-    
-    # Print the title at the top
-    title_padding = " " * 2
-    print()
-    print(f"{title_padding}{theme['title']}{title}{Style.RESET_ALL}")
-    print(f"{title_padding}{theme['title']}{'-' * len(title)}{Style.RESET_ALL}")
-    print()
     
     # Calculate how many lines of content to display to ensure proper alignment
     max_content_lines = max(left_height, info_height)
+    
+    # Add some padding
+    print()
     
     # Display content side by side
     for i in range(max_content_lines):
@@ -182,76 +186,132 @@ def display_winfetch(display_type, art_source, system_info, config, image_height
     # Add color blocks at the bottom
     print()
     color_blocks = create_color_blocks(theme)
-    print(f"{title_padding}{color_blocks}")
+    print(f"{' ' * 2}{color_blocks}")
     print()
 
-def list_ascii_templates():
-    """List available ASCII art templates."""
+def setup_wizard():
+    """Interactive setup wizard to create/modify the config file."""
+    from colorama import Fore, Style
+    import image_handler
     import os
-    ascii_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ascii")
-    if os.path.exists(ascii_dir):
-        templates = [f.replace(".txt", "") for f in os.listdir(ascii_dir) if f.endswith(".txt")]
-        print("Available ASCII templates:")
-        for template in templates:
-            print(f"  - {template}")
+    
+    print(f"{Fore.CYAN}WinFetch Setup Wizard{Style.RESET_ALL}")
+    print("-----------------")
+    print("This wizard will help you create a custom configuration for WinFetch.\n")
+    
+    # Default config
+    config = load_config()
+    
+    # Display type
+    print(f"{Fore.YELLOW}Display Type:{Style.RESET_ALL}")
+    print("1. Image (recommended)")
+    print("2. ASCII Art")
+    choice = input("Choose [1/2] (default: 1): ").strip() or "1"
+    config["display_type"] = "image" if choice == "1" else "ascii"
+    print()
+    
+    # Image selection
+    if config["display_type"] == "image":
+        # List available images
+        images = image_handler.list_available_images()
+        if images:
+            print(f"{Fore.YELLOW}Available Images:{Style.RESET_ALL}")
+            for i, img in enumerate(images, 1):
+                print(f"{i}. {img}")
+            
+            img_choice = input("Choose image number (or type a path/filename): ").strip()
+            try:
+                idx = int(img_choice) - 1
+                if 0 <= idx < len(images):
+                    config["image"] = images[idx]
+                else:
+                    config["image"] = img_choice
+            except ValueError:
+                config["image"] = img_choice
+        else:
+            print("No images found in images directory.")
+            print("Please place images in the 'images' directory and run setup again.")
+            config["image"] = "windows_logo.png"  # Default fallback
     else:
-        print("ASCII template directory not found.")
-
-def list_color_themes():
-    """List available color themes."""
+        # ASCII art selection
+        ascii_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ascii")
+        if os.path.exists(ascii_dir):
+            ascii_files = [f.replace(".txt", "") for f in os.listdir(ascii_dir) if f.endswith(".txt")]
+            
+            print(f"{Fore.YELLOW}Available ASCII Art:{Style.RESET_ALL}")
+            for i, art in enumerate(ascii_files, 1):
+                print(f"{i}. {art}")
+                
+            art_choice = input("Choose ASCII art number (default: windows): ").strip()
+            try:
+                idx = int(art_choice) - 1
+                if 0 <= idx < len(ascii_files):
+                    config["ascii_art"] = ascii_files[idx]
+            except ValueError:
+                if art_choice:
+                    config["ascii_art"] = art_choice
+    print()
+    
+    # Theme selection
     import color_themes
-    print("Available color themes:")
-    for theme in color_themes.THEMES:
-        print(f"  - {theme}")
-    print("\nAdditionally, you can use any of these basic colors:")
-    for color in sorted(color_themes.COLOR_MAP.keys()):
-        print(f"  - {color}")
-
-def list_images():
-    """List available images."""
-    from image_handler import list_available_images
-    images = list_available_images()
+    print(f"{Fore.YELLOW}Available Color Themes:{Style.RESET_ALL}")
+    for i, theme in enumerate(color_themes.THEMES.keys(), 1):
+        print(f"{i}. {theme}")
     
-    if not images:
-        print("No images found in the images directory.")
-        print(f"Place image files in the '{os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')}' directory.")
-        return
+    theme_choice = input("Choose theme number (default: default): ").strip()
+    theme_list = list(color_themes.THEMES.keys())
+    try:
+        idx = int(theme_choice) - 1
+        if 0 <= idx < len(theme_list):
+            config["theme"] = theme_list[idx]
+    except ValueError:
+        if theme_choice in color_themes.THEMES:
+            config["theme"] = theme_choice
+    print()
     
-    print("Available images:")
-    for image in images:
-        print(f"  - {image}")
+    # Image height
+    if config["display_type"] == "image":
+        print(f"{Fore.YELLOW}Image Height:{Style.RESET_ALL}")
+        print("Recommended: 18-25 for best results")
+        height_choice = input("Enter image height (default: 20): ").strip()
+        try:
+            config["image_height"] = int(height_choice)
+        except:
+            config["image_height"] = 20
+    print()
+    
+    # Save configuration
+    config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+    
+    config_path = os.path.join(config_dir, "config.json")
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=4)
+    
+    print(f"{Fore.GREEN}Configuration saved to {config_path}{Style.RESET_ALL}")
+    print(f"Run WinFetch with 'python winfetch.py' to see your changes.\n")
 
 def main():
     """Main function."""
     args = parse_args()
     
-    # Handle special commands
-    if args.list_themes:
-        list_color_themes()
+    # Handle version flag
+    if args.version:
+        print("WinFetch v1.0.0")
         return
     
-    if args.list_ascii:
-        list_ascii_templates()
-        return
-    
-    if args.list_images:
-        list_images()
+    # Handle setup wizard
+    if args.setup:
+        setup_wizard()
         return
     
     # Load configuration
     config = load_config(args.config)
     
-    # Override config with command line args
-    if args.ascii:
-        config["display_type"] = "ascii"
-        config["ascii_art"] = args.ascii
-    
-    if args.image:
-        config["display_type"] = "image"
-        config["image"] = args.image
-    
-    if args.theme:
-        config["theme"] = args.theme
+    # Override config with command line args if provided
+    if args.height:
+        config["image_height"] = args.height
     
     # Load display content (ASCII art or image path)
     display_type = config.get("display_type", "ascii")
@@ -269,8 +329,7 @@ def main():
         display_type=display_type,
         art_source=art_source,
         system_info=system_info,
-        config=config,
-        image_height=args.height
+        config=config
     )
 
 if __name__ == "__main__":
