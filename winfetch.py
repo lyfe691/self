@@ -10,6 +10,7 @@ import platform
 import argparse
 from colorama import init, Fore, Style
 import shutil
+import textwrap
 
 # Initialize colorama
 init()
@@ -131,7 +132,7 @@ def display_winfetch(display_type, art_source, system_info, config):
     theme_name = config.get("theme", "default")
     theme = color_themes.get_theme(theme_name)
     
-    # Get terminal width
+    # Get terminal width for proper wrapping
     terminal_width = get_terminal_width()
     
     # Add username@hostname as title
@@ -158,7 +159,16 @@ def display_winfetch(display_type, art_source, system_info, config):
         # ASCII art
         left_content = art_source.split('\n')
     
-    # Apply color to info text
+    # Determine dimensions
+    left_width = max(len(line) for line in left_content) if left_content else 0
+    
+    # Spacing between sections
+    spacing = 4
+    
+    # Calculate max width for info text
+    info_max_width = terminal_width - left_width - spacing - 5  # 5 chars of safety margin
+    
+    # Apply color to info text with proper wrapping
     info_list = []
     
     # Add username@hostname at the top of the info section
@@ -166,34 +176,77 @@ def display_winfetch(display_type, art_source, system_info, config):
     info_list.append(f"{theme['title']}{'-' * len(user_host)}{Style.RESET_ALL}")
     info_list.append("")  # Empty line after the title
     
+    # Process system info with wrapping for long lines
     for key in config["info_display"]:
         if key in system_info:
             info_text = system_info[key]
-            info_list.append(color_themes.apply_label_color(info_text, theme["label"]))
-    
-    # Determine dimensions
-    left_width = max(len(line) for line in left_content) if left_content else 0
-    left_height = len(left_content)
-    info_height = len(info_list)
-    
-    # Spacing between sections
-    spacing = 4
+            # Check if the line is too long and needs wrapping
+            if len(info_text) > info_max_width:
+                # Find the label part (typically before the colon)
+                parts = info_text.split(':', 1)
+                if len(parts) == 2:
+                    label = parts[0] + ':'
+                    content = parts[1]
+                    # Apply coloring to label
+                    colored_label = color_themes.apply_label_color(label, theme["label"])
+                    # Wrap the content part
+                    wrapped_content = textwrap.fill(content, width=info_max_width - len(label))
+                    # Replace first line with label + first line of wrapped content
+                    wrapped_lines = wrapped_content.split('\n')
+                    first_line = colored_label + wrapped_lines[0]
+                    info_list.append(first_line)
+                    # Add remaining wrapped lines with proper indentation
+                    for line in wrapped_lines[1:]:
+                        info_list.append(' ' * (len(label) + 1) + line)
+                else:
+                    # No colon found, just wrap the whole text
+                    wrapped = textwrap.fill(info_text, width=info_max_width)
+                    for line in wrapped.split('\n'):
+                        info_list.append(color_themes.apply_label_color(line, theme["label"]))
+            else:
+                # Line is short enough, no wrapping needed
+                info_list.append(color_themes.apply_label_color(info_text, theme["label"]))
     
     # Clear screen
     print("\033[H\033[J", end="")
     
-    # Calculate how many lines of content to display to ensure proper alignment
-    max_content_lines = max(left_height, info_height)
-    
     # Add some padding
     print()
     
-    # Display content side by side
-    for i in range(max_content_lines):
-        left_line = left_content[i] if i < left_height else ""
-        info_line = info_list[i] if i < info_height else ""
+    # Get heights after processing
+    left_height = len(left_content)
+    info_height = len(info_list)
+    
+    # Prepare the combined display
+    max_lines = max(left_height, info_height)
+    
+    # Create a two-column layout with fixed positions
+    for i in range(max_lines):
+        # Left column (ASCII art or image)
+        if i < left_height:
+            left_line = left_content[i]
+        else:
+            left_line = ""
+            
+        # Right column (system info)
+        if i < info_height:
+            info_line = info_list[i]
+        else:
+            info_line = ""
         
-        print(f"{left_line}{' ' * spacing}{info_line}")
+        # Print the line with fixed spacing
+        if left_line:
+            print(f"{left_line}", end="")
+            # Calculate remaining space to the fixed info position
+            current_pos = len(left_line)
+            if current_pos < left_width + spacing:
+                print(" " * (left_width + spacing - current_pos), end="")
+        else:
+            # No art on this line, just pad to the info position
+            print(" " * (left_width + spacing), end="")
+            
+        # Print the info
+        print(f"{info_line}")
     
     # Add color blocks at the bottom
     print()
