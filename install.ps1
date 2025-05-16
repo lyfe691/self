@@ -83,7 +83,7 @@ try {
 }
 
 Write-Host ""
-Write-Host "Installation completed!" -ForegroundColor Green
-Write-Host "The 'self' command has been installed to $INSTALL_DIR" -ForegroundColor Green
-Write-Host "You may need to restart your terminal or computer for the PATH changes to take effect." -ForegroundColor Yellow
-Write-Host "You can now use 'self' to show system information." -ForegroundColor Green 
+Write-Host "installed" -ForegroundColor Green
+Write-Host "self has been installed to $INSTALL_DIR" -ForegroundColor Green
+Write-Host "you may need to restart your terminal or computer for the PATH changes to take effect." -ForegroundColor Yellow
+Write-Host "you can now use 'self' to show system information." -ForegroundColor Green 
