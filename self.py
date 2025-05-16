@@ -66,7 +66,7 @@ def load_ascii_art(art_name):
         with open(art_path, 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
-        # Fallback to a simple ASCII art
+        # fallback if sum goes wrong
         return """
         ################
         ##            ##
@@ -75,7 +75,7 @@ def load_ascii_art(art_name):
         ################
         """
     except UnicodeDecodeError:
-        # Fallback if we have encoding issues
+        # fallback if encoding issues
         print(f"warning: encoding issue with ascii art file: {art_path}")
         return """
         ################
@@ -87,16 +87,14 @@ def load_ascii_art(art_name):
 
 def get_system_info(use_cache=True):
     """Collect system information."""
-    # check if cache exists and is fresh
     if use_cache and os.path.exists(CACHE_FILE):
         try:
             with open(CACHE_FILE, 'r') as f:
                 cache_data = json.load(f)
-                # check if cache is still valid
                 if time.time() - cache_data['timestamp'] < CACHE_TIMEOUT:
                     return cache_data['info']
         except (json.JSONDecodeError, KeyError, FileNotFoundError):
-            pass  # if any error, just regenerate
+            pass
     
     # get fresh information
     import win_sysinfo
@@ -229,7 +227,7 @@ def display_winfetch(display_type, art_source, system_info, config, execution_ti
     # Add execution time if provided
     if execution_time is not None:
         info_lines.append("")
-        info_lines.append(f"{theme['label']}Time:{Style.RESET_ALL} {execution_time:.2f}s")
+        info_lines.append(f"{theme['label']}Executed in{Style.RESET_ALL} {execution_time:.2f}s")
     
     # Measure height of both columns
     left_height = len(left_content)
