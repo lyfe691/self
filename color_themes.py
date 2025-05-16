@@ -1,5 +1,5 @@
 """
-color themes for winfetch
+color themes for self
 """
 
 from colorama import Fore, Back, Style
@@ -7,7 +7,7 @@ from colorama import Fore, Back, Style
 # cache for color formatted strings
 _color_cache = {}
 
-# Basic color mapping
+# basic color mapping
 COLOR_MAP = {
     "black": Fore.BLACK,
     "blue": Fore.BLUE,
@@ -27,7 +27,7 @@ COLOR_MAP = {
     "lightyellow": Fore.LIGHTYELLOW_EX
 }
 
-# Predefined themes
+# predefined themes
 THEMES = {
     "default": {
         "title": Fore.BLUE,
@@ -105,7 +105,7 @@ def colorize(text, color_code):
     return result
 
 def apply_label_color(info_text, label_color):
-    # check if this text/color combo is cached
+    # check if this text / color is cached
     cache_key = f"{info_text}::{label_color}"
     if cache_key in _color_cache:
         return _color_cache[cache_key]

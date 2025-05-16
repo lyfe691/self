@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-winfetch - customizable system information tool for windows
+self - windows neofetch
+
+Author: Yanis Sebastian Zürcher
 """
 
 import os
@@ -13,12 +15,12 @@ from colorama import init, Fore, Style
 import shutil
 import textwrap
 
-# Initialize colorama
+# Init colorama
 init()
 
 # cache system information with a timeout
 CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache", "sysinfo.json")
-CACHE_TIMEOUT = 300  # 5 minutes
+CACHE_TIMEOUT = 300 # 5 min
 
 def parse_args():
     """Parse command line arguments."""
@@ -46,12 +48,12 @@ def load_config(config_path=None):
         print(f"config file not found: {config_path}")
         print("using default configuration.")
         return {
-            "display_type": "image",  # "image" or "ascii"
-            "image": "rei.jpg",  # Default image
-            "ascii_art": "windows",  # Default ASCII art
-            "theme": "blue",  # Default theme
-            "image_height": 20,  # Default image height
-            "image_width": None,  # Default image width (None = auto-calculate based on aspect ratio)
+            "display_type": "image",  # image or ascii
+            "image": "rei.jpg",  # default image
+            "ascii_art": "windows",  # default ascii art
+            "theme": "blue",  # default theme
+            "image_height": 20,  # default image height
+            "image_width": None,  # default image width (none = auto calc based on aspect ratio)
             "info_display": [
                 "os", "hostname", "kernel", "uptime", "packages", 
                 "shell", "resolution", "wm", "theme", "terminal", 
@@ -116,30 +118,30 @@ def get_system_info(use_cache=True):
 
 def create_color_blocks(theme):
     """Create terminal color blocks for display."""
-    # Define colors to use
+    # define colors to use
     colors = [
-        (0, 0, 0),         # Black
-        (170, 0, 0),       # Red
-        (0, 170, 0),       # Green
-        (170, 85, 0),      # Yellow
-        (0, 0, 170),       # Blue
-        (170, 0, 170),     # Magenta
-        (0, 170, 170),     # Cyan
-        (170, 170, 170),   # White
-        (85, 85, 85),      # Bright Black
-        (255, 85, 85),     # Bright Red
-        (85, 255, 85),     # Bright Green
-        (255, 255, 85),    # Bright Yellow
-        (85, 85, 255),     # Bright Blue
-        (255, 85, 255),    # Bright Magenta
-        (85, 255, 255),    # Bright Cyan
-        (255, 255, 255)    # Bright White
+        (0, 0, 0),         # black
+        (170, 0, 0),       # red
+        (0, 170, 0),       # green
+        (170, 85, 0),      # yellow
+        (0, 0, 170),       # blue
+        (170, 0, 170),     # magenta
+        (0, 170, 170),     # cyan
+        (170, 170, 170),   # white
+        (85, 85, 85),      # bright black
+        (255, 85, 85),     # bright red
+        (85, 255, 85),     # bright green
+        (255, 255, 85),    # bright yellow
+        (85, 85, 255),     # bright blue
+        (255, 85, 255),    # bright magenta
+        (85, 255, 255),    # bright cyan
+        (255, 255, 255)    # bright white
     ]
     
-    # Import RGB to ANSI function
+    # import rgb to ansi function
     from image_handler import rgb_to_ansi
     
-    # Create color blocks
+    # create color blocks
     blocks = ""
     for r, g, b in colors:
         blocks += f"{rgb_to_ansi(r, g, b, bg=True)}   {Style.RESET_ALL}"
@@ -152,29 +154,29 @@ def get_terminal_width():
         columns, _ = shutil.get_terminal_size()
         return columns
     except:
-        return 80  # Default width
+        return 80  # default width
 
 def display_winfetch(display_type, art_source, system_info, config, execution_time=None):
     """Display the fetched information with ASCII art or image."""
-    # Import modules
+    # import modules
     import color_themes
     from image_handler import image_to_ansi, get_image_path
     
-    # Get theme
+    # get theme
     theme_name = config.get("theme", "default")
     theme = color_themes.get_theme(theme_name)
     
-    # Get terminal width for proper wrapping
+    # get terminal width for proper wrapping
     terminal_width = get_terminal_width()
     
-    # Add username@hostname as title
+    # add username@hostname as title
     import os
     import platform
     username = os.environ.get("USERNAME", "user")
     hostname = platform.node()
     user_host = f"{username}@{hostname}"
     
-    # Prepare left side content (ASCII art or image)
+    # prepare left side content (ascii art or image)
     left_content = []
     image_height = config.get("image_height", 20)
     image_width = config.get("image_width", None)
@@ -182,90 +184,90 @@ def display_winfetch(display_type, art_source, system_info, config, execution_ti
     if display_type == "image":
         image_path = get_image_path(art_source)
         if image_path:
-            # Render image directly without sharpening
+            # render image directly without sharpening
             left_content = image_to_ansi(image_path, height=image_height, width=image_width)
         else:
-            # Fallback to ASCII if image not found
+            # fallback to ascii if image not found
             left_content = load_ascii_art("windows").split('\n')
     else:
-        # ASCII art
+        # ascii art
         left_content = art_source.split('\n')
     
-    # Determine dimensions
+    # determine dimensions
     left_width = max(len(strip_ansi(line)) for line in left_content) if left_content else 0
     
-    # Spacing between sections
+    # spacing between sections
     spacing = 2
     
-    # Clear screen
+    # clear screen
     print("\033[H\033[J", end="")
     
-    # Add padding at top
+    # add padding at top
     print()
     
-    # Prepare system info text with colors
+    # prepare system info text with colors
     info_lines = []
     
-    # Add username@hostname at the top, colored
+    # add username@hostname at the top, colored
     info_lines.append(f"{theme['title']}{user_host}{Style.RESET_ALL}")
     info_lines.append(f"{theme['title']}{'-' * len(user_host)}{Style.RESET_ALL}")
-    info_lines.append("")  # Empty line
+    info_lines.append("")  # empty line
     
-    # Format system info with proper coloring
+    # format system info with proper coloring
     for key in config["info_display"]:
         if key in system_info:
             info_text = system_info[key]
             
-            # Format with proper coloring - assume format is "Label: Value"
+            # format with proper coloring - assume format is "Label: Value"
             if ": " in info_text:
                 label, value = info_text.split(": ", 1)
-                # Apply theme colors to label and value
+                # apply theme colors to label and value
                 info_lines.append(f"{theme['label']}{label}:{Style.RESET_ALL} {value}")
             else:
                 info_lines.append(color_themes.apply_label_color(info_text, theme["label"]))
     
-    # Add execution time if provided
+    # add execution time if provided
     if execution_time is not None:
         info_lines.append("")
         info_lines.append(f"{theme['label']}Executed in{Style.RESET_ALL} {execution_time:.2f}s")
     
-    # Measure height of both columns
+    # measure height of both columns
     left_height = len(left_content)
     info_height = len(info_lines)
     
-    # Calculate maximum height needed
+    # calculate maximum height needed
     max_height = max(left_height, info_height)
     
-    # Print each line with the image on the left and info on the right
+    # print each line with the image on the left and info on the right
     for i in range(max_height):
-        # Determine what to print on the left side (image or ASCII art)
+        # determine what to print on the left side (image or ascii art)
         if i < left_height:
             left_line = left_content[i]
         else:
             left_line = ""
         
-        # Determine what to print on the right side (system info)
+        # determine what to print on the right side (system info)
         if i < info_height:
             info_line = info_lines[i]
         else:
             info_line = ""
         
-        # Print the left content
+        # print the left content
         print(left_line, end="")
         
-        # Calculate spacing to position info text
+        # calculate spacing to position info text
         current_pos = len(strip_ansi(left_line))
         if current_pos < left_width:
-            # Add space to align with the width of the image/ASCII art
+            # add space to align with the width of the image/ascii art
             print(" " * (left_width - current_pos), end="")
         
-        # Add the minimal spacing between the image and text
+        # add the minimal spacing between the image and text
         print(" " * spacing, end="")
         
-        # Print the info text
+        # print the info text
         print(info_line)
     
-    # Add color blocks at the bottom
+    # add color blocks at the bottom
     print()
     color_blocks = create_color_blocks(theme)
     print(f"{' ' * 2}{color_blocks}")
@@ -380,7 +382,7 @@ def setup_wizard():
             config["image_width"] = None
     print()
     
-    # Save configuration
+    # save configuration
     config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
@@ -404,7 +406,7 @@ def main():
         setup_wizard()
         return
     
-    # Use the debug flag from args
+    # use the debug flag from args
     debug_mode = args.debug
     
     config = load_config(args.config)
@@ -414,19 +416,19 @@ def main():
     if args.width:
         config["image_width"] = args.width
     
-    # For debugging, we can force ASCII art mode as it's simpler
+    # for debugging, force ascii art mode as it's simpler
     if debug_mode:
         display_type = "ascii"
         art_source = load_ascii_art("windows")
         system_info = get_system_info(not args.no_cache)
         execution_time = 0.0
         
-        # Simple debug display
+        # simple debug display
         print("=" * 40)
         print("WINFETCH DEBUG MODE")
         print("=" * 40)
         
-        # Print system info directly
+        # print system info directly
         for key in config["info_display"]:
             if key in system_info:
                 print(system_info[key])
@@ -435,7 +437,7 @@ def main():
         print(art_source)
         return
         
-    # Delete the old cache file if it exists to refresh GPU info
+    # delete the old cache file if it exists to refresh gpu info
     if os.path.exists(CACHE_FILE) and not args.no_cache:
         try:
             with open(CACHE_FILE, 'r') as f:
@@ -443,19 +445,19 @@ def main():
                 if 'info' in cache_data and 'gpu' in cache_data['info']:
                     gpu_info = cache_data['info']['gpu']
                     if 'Unknown' in gpu_info:
-                        # If GPU is unknown, invalidate the cache
+                        # if gpu is unknown, invalidate the cache
                         os.remove(CACHE_FILE)
         except:
-            # If there's any error reading the cache, just delete it
+            # if there's any error reading the cache, just delete it
             try:
                 os.remove(CACHE_FILE)
             except:
                 pass
     
-    # Restore user's display type preference from config
+    # restore users display type preference from config
     display_type = config.get("display_type", "ascii")
     
-    # Override display type if specified in arguments
+    # override display type if specified in arguments
     if args.image:
         display_type = "image"
         config["image"] = args.image

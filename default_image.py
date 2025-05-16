@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-create a simple windows logo image for winfetch
+lowk useless
+
+its to make an image if we somehow have none
 """
 
 from PIL import Image, ImageDraw
@@ -13,10 +15,10 @@ def create_windows_logo(size=400, filename="images/windows_logo.png"):
     square_size = (size - (border * 3)) // 2
     
     colors = [
-        (246, 83, 20),  # red (top-left)
-        (124, 187, 0),  # green (top-right)
-        (0, 161, 241),  # blue (bottom-left)
-        (255, 187, 0)   # yellow (bottom-right)
+        (246, 83, 20),  # red (top left)
+        (124, 187, 0),  # green (top right)
+        (0, 161, 241),  # blue (bottom left)
+        (255, 187, 0)   # yellow (bottom right)
     ]
     
     positions = [
