@@ -392,7 +392,7 @@ def setup_wizard():
         json.dump(config, f, indent=4)
     
     print(f"{Fore.GREEN}Configuration saved to {config_path}{Style.RESET_ALL}")
-    print(f"Run self with 'python self.py' to see your changes.\n")
+    print(f"Run self with 'self' or if dev 'python self.py' to see your changes.\n")
 
 def main():
     """Main function."""
