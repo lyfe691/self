@@ -1,0 +1,27 @@
+{
+    "ascii_art": "windows",
+    "color": "blue",
+    "info_display": [
+        "os",
+        "hostname",
+        "kernel",
+        "uptime",
+        "packages",
+        "shell",
+        "resolution",
+        "cpu",
+        "memory",
+        "disk"
+    ],
+    "colors": {
+        "title": "blue",
+        "text": "white",
+        "icon": "blue"
+    },
+    "display_options": {
+        "show_title": true,
+        "show_package_managers": true,
+        "show_cpu_details": true,
+        "show_gpu_details": true
+    }
+} 

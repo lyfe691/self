@@ -1,0 +1,27 @@
+/*
+ * WinFetch ASCII Art Template
+ * 
+ * Instructions:
+ * 1. Replace this text with your custom ASCII art
+ * 2. Keep each line under 40 characters for best display
+ * 3. Save with a meaningful name (e.g., mylogo.txt)
+ * 4. Use in WinFetch with --ascii mylogo
+ *
+ * Example dimensions below (30x15):
+ */
+
+##############################
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+#                            #
+############################## 
