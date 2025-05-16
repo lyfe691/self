@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WinFetch Demo Script
-Shows different ways to use WinFetch
+winfetch demo script
+shows different ways to use winfetch
 """
 
 import os

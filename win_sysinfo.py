@@ -1,5 +1,5 @@
 """
-Windows System Information Module for WinFetch
+windows system information module for winfetch
 """
 
 import os
@@ -12,7 +12,6 @@ from datetime import datetime
 import wmi
 
 def get_os_info():
-    """Get Windows OS information."""
     os_name = platform.system()
     os_version = platform.version()
     build = platform.win32_ver()[1]
@@ -24,22 +23,18 @@ def get_os_info():
     except:
         pass
     
-    # Simplify the edition name if it's too long
     if "Windows" in edition:
         edition = edition.replace("Microsoft ", "")
     
     return f"OS: {edition} {platform.machine()}"
 
 def get_hostname():
-    """Get system hostname."""
     return f"Host: {platform.node()}"
 
 def get_kernel_version():
-    """Get Windows kernel version."""
     return f"Kernel: {platform.release()}"
 
 def get_uptime():
-    """Get system uptime."""
     boot_time = datetime.fromtimestamp(psutil.boot_time())
     now = datetime.now()
     uptime = now - boot_time
@@ -60,10 +55,8 @@ def get_uptime():
     return f"Uptime: {uptime_str}"
 
 def get_packages():
-    """Get installed packages count from different package managers."""
     packages = []
     
-    # Count Chocolatey packages if installed
     try:
         choco_count = subprocess.check_output('powershell -command "if (Get-Command choco -ErrorAction SilentlyContinue) { (Get-ChildItem -Path $env:ChocolateyInstall\\lib -Directory).Count }"', 
                                            shell=True).decode().strip()
@@ -72,7 +65,6 @@ def get_packages():
     except:
         pass
     
-    # Count Scoop packages if installed
     try:
         scoop_count = subprocess.check_output('powershell -command "if (Get-Command scoop -ErrorAction SilentlyContinue) { (Get-ChildItem -Path $env:USERPROFILE\\scoop\\apps -Directory).Count }"', 
                                            shell=True).decode().strip()
@@ -81,13 +73,11 @@ def get_packages():
     except:
         pass
     
-    # Count Winget packages
     try:
         winget_output = subprocess.check_output('powershell -command "if (Get-Command winget -ErrorAction SilentlyContinue) { winget list | Measure-Object -Line }"', 
                                              shell=True).decode().strip()
         winget_count = re.search(r'(\d+)', winget_output)
         if winget_count:
-            # Subtract 1 for header line
             count = max(0, int(winget_count.group(1)) - 1)
             packages.append(f"{count} (winget)")
     except:
@@ -99,7 +89,6 @@ def get_packages():
     return f"Packages: {', '.join(packages)}"
 
 def get_shell():
-    """Get current shell information."""
     powershell_path = os.environ.get('PSModulePath', '')
     if 'powershell' in os.environ.get('ComSpec', '').lower() or 'powershell' in powershell_path.lower():
         try:
@@ -112,7 +101,6 @@ def get_shell():
         return f"Shell: {os.environ.get('ComSpec', 'Unknown')}"
 
 def get_resolution():
-    """Get screen resolution."""
     try:
         user32 = ctypes.windll.user32
         width = user32.GetSystemMetrics(0)
@@ -122,13 +110,10 @@ def get_resolution():
         return "Resolution: Unknown"
 
 def get_window_manager():
-    """Get window manager (technically not applicable to Windows, but for UI consistency)."""
     return "WM: Windows Explorer"
 
 def get_window_theme():
-    """Get Windows theme information."""
     try:
-        # Check if dark/light mode is enabled
         theme_value = subprocess.check_output(
             'powershell -command "Get-ItemProperty -Path HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize -Name AppsUseLightTheme | Select-Object -ExpandProperty AppsUseLightTheme"',
             shell=True
@@ -136,7 +121,6 @@ def get_window_theme():
         
         theme_mode = "Light" if theme_value == "1" else "Dark"
         
-        # Try to get the actual theme name
         try:
             theme_name = subprocess.check_output(
                 'powershell -command "(Get-ItemProperty -Path \'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\' -Name CurrentTheme).CurrentTheme | Split-Path -Leaf"',
@@ -150,11 +134,9 @@ def get_window_theme():
         return "Theme: Unknown"
 
 def get_icons():
-    """Get icon theme information."""
     return "Icons: Windows Default"
 
 def get_terminal():
-    """Get terminal information."""
     try:
         process_name = subprocess.check_output('powershell -command "Get-Process -Id $PID | Select-Object -ExpandProperty Name"',
                                              shell=True).decode().strip()
@@ -171,32 +153,24 @@ def get_terminal():
         return "Terminal: Unknown"
 
 def get_font():
-    """Get terminal font information."""
     try:
-        # For Windows Terminal we could parse the settings.json
-        # This is a simplified approach
         return "Font: Consolas"
     except:
         return "Font: Unknown"
 
 def get_cpu_info():
-    """Get CPU information."""
     try:
-        # Try using WMI to get CPU info
         w = wmi.WMI()
         cpu = w.Win32_Processor()[0]
         cpu_name = cpu.Name.strip()
         
-        # Clean up CPU name - remove excessive spaces
         cpu_name = re.sub(r'\s+', ' ', cpu_name)
         
-        # Try to get CPU frequency
         try:
             freq = f" @ {round(cpu.MaxClockSpeed/1000, 2)}GHz"
         except:
             freq = ""
         
-        # Get core/thread counts
         try:
             cores = cpu.NumberOfCores
             threads = cpu.NumberOfLogicalProcessors
@@ -206,17 +180,14 @@ def get_cpu_info():
         
         return f"CPU: {cpu_name}{freq}{cores_threads}"
     except:
-        # Fallback to basic platform info
         return f"CPU: {platform.processor()}"
 
 def get_gpu_info():
-    """Get GPU information."""
     try:
         w = wmi.WMI()
         gpu_info = w.Win32_VideoController()[0]
         gpu_name = gpu_info.Name
         
-        # Try to get GPU memory
         try:
             gpu_ram = gpu_info.AdapterRAM
             if gpu_ram and gpu_ram > 0:
@@ -231,19 +202,16 @@ def get_gpu_info():
         return "GPU: Unknown"
 
 def get_memory_info():
-    """Get memory information."""
     mem = psutil.virtual_memory()
     total_gb = mem.total / (1024**3)
     used_gb = mem.used / (1024**3)
     
-    # Format to match the example: 1999MiB / 7690MiB
     total_mb = int(total_gb * 1024)
     used_mb = int(used_gb * 1024)
     
     return f"Memory: {used_mb}MiB / {total_mb}MiB"
 
 def get_disk_info():
-    """Get disk information."""
     partitions = psutil.disk_partitions()
     disks = []
     
@@ -267,7 +235,6 @@ def get_disk_info():
     return f"Disk: {', '.join(disks[:2])}" + (f" (+{len(disks)-2} more)" if len(disks) > 2 else "")
 
 def get_all_info():
-    """Get all system information."""
     return {
         "os": get_os_info(),
         "hostname": get_hostname(),
@@ -288,9 +255,8 @@ def get_all_info():
     }
 
 def safe_get(func, fallback="Unknown"):
-    """Safely call a function with fallback for exceptions."""
     try:
         return func()
     except Exception as e:
-        print(f"Warning: {e}")
+        print(f"warning: {e}")
         return fallback 

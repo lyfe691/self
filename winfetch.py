@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WinFetch - A customizable system information tool for Windows
+winfetch - customizable system information tool for windows
 """
 
 import os
@@ -34,8 +34,8 @@ def load_config(config_path=None):
         with open(config_path, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"Config file not found: {config_path}")
-        print("Using default configuration.")
+        print(f"config file not found: {config_path}")
+        print("using default configuration.")
         return {
             "display_type": "image",  # "image" or "ascii"
             "image": "rei.jpg",  # Default image
@@ -67,7 +67,7 @@ def load_ascii_art(art_name):
         """
     except UnicodeDecodeError:
         # Fallback if we have encoding issues
-        print(f"Warning: Encoding issue with ASCII art file: {art_path}")
+        print(f"warning: encoding issue with ascii art file: {art_path}")
         return """
         ################
         ##            ##

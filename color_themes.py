@@ -1,5 +1,5 @@
 """
-Color themes for WinFetch
+color themes for winfetch
 """
 
 from colorama import Fore, Back, Style
