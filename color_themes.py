@@ -4,6 +4,9 @@ color themes for winfetch
 
 from colorama import Fore, Back, Style
 
+# cache for color formatted strings
+_color_cache = {}
+
 # Basic color mapping
 COLOR_MAP = {
     "black": Fore.BLACK,
@@ -64,31 +67,54 @@ THEMES = {
     }
 }
 
+# precompute theme lookups
+_theme_cache = {}
+
 def get_theme(theme_name="default"):
-    """Get a color theme by name."""
-    if theme_name in THEMES:
-        return THEMES[theme_name]
+    global _theme_cache
     
-    # If theme name is a color name, create a theme based on that color
-    if theme_name.lower() in COLOR_MAP:
+    # check if theme is already cached
+    if theme_name in _theme_cache:
+        return _theme_cache[theme_name]
+    
+    if theme_name in THEMES:
+        result = THEMES[theme_name]
+    elif theme_name.lower() in COLOR_MAP:
         color = COLOR_MAP[theme_name.lower()]
-        return {
+        result = {
             "title": color,
             "ascii": color,
             "text": Fore.RESET,
             "label": color
         }
+    else:
+        result = THEMES["default"]
     
-    # Default to the default theme
-    return THEMES["default"]
+    # cache the result
+    _theme_cache[theme_name] = result
+    return result
 
 def colorize(text, color_code):
-    """Apply color to text."""
-    return f"{color_code}{text}{Style.RESET_ALL}"
+    # check if this text/color combo is cached
+    cache_key = f"{text}::{color_code}"
+    if cache_key in _color_cache:
+        return _color_cache[cache_key]
+    
+    result = f"{color_code}{text}{Style.RESET_ALL}"
+    _color_cache[cache_key] = result
+    return result
 
 def apply_label_color(info_text, label_color):
-    """Apply color to the label part of the info text (before the colon)."""
+    # check if this text/color combo is cached
+    cache_key = f"{info_text}::{label_color}"
+    if cache_key in _color_cache:
+        return _color_cache[cache_key]
+    
     if ': ' in info_text:
         label, value = info_text.split(': ', 1)
-        return f"{label_color}{label}{Style.RESET_ALL}: {value}"
-    return info_text 
+        result = f"{label_color}{label}{Style.RESET_ALL}: {value}"
+    else:
+        result = info_text
+    
+    _color_cache[cache_key] = result
+    return result 
