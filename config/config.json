@@ -1,6 +1,8 @@
 {
+    "display_type": "image",
+    "image": "windows_logo.png",
     "ascii_art": "windows",
-    "color": "blue",
+    "theme": "blue",
     "info_display": [
         "os",
         "hostname",
@@ -9,7 +11,12 @@
         "packages",
         "shell",
         "resolution",
+        "wm",
+        "theme",
+        "terminal",
+        "font",
         "cpu",
+        "gpu",
         "memory",
         "disk"
     ],

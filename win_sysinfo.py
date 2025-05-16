@@ -16,9 +16,19 @@ def get_os_info():
     os_name = platform.system()
     os_version = platform.version()
     build = platform.win32_ver()[1]
-    edition = subprocess.check_output('powershell -command "(Get-WmiObject -Class Win32_OperatingSystem).Caption"', 
+    edition = "Unknown"
+    
+    try:
+        edition = subprocess.check_output('powershell -command "(Get-WmiObject -Class Win32_OperatingSystem).Caption"', 
                                      shell=True).decode().strip()
-    return f"OS: {edition} ({build})"
+    except:
+        pass
+    
+    # Simplify the edition name if it's too long
+    if "Windows" in edition:
+        edition = edition.replace("Microsoft ", "")
+    
+    return f"OS: {edition} {platform.machine()}"
 
 def get_hostname():
     """Get system hostname."""
@@ -26,7 +36,7 @@ def get_hostname():
 
 def get_kernel_version():
     """Get Windows kernel version."""
-    return f"Kernel: NT {platform.release()}"
+    return f"Kernel: {platform.release()}"
 
 def get_uptime():
     """Get system uptime."""
@@ -111,6 +121,64 @@ def get_resolution():
     except:
         return "Resolution: Unknown"
 
+def get_window_manager():
+    """Get window manager (technically not applicable to Windows, but for UI consistency)."""
+    return "WM: Windows Explorer"
+
+def get_window_theme():
+    """Get Windows theme information."""
+    try:
+        # Check if dark/light mode is enabled
+        theme_value = subprocess.check_output(
+            'powershell -command "Get-ItemProperty -Path HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize -Name AppsUseLightTheme | Select-Object -ExpandProperty AppsUseLightTheme"',
+            shell=True
+        ).decode().strip()
+        
+        theme_mode = "Light" if theme_value == "1" else "Dark"
+        
+        # Try to get the actual theme name
+        try:
+            theme_name = subprocess.check_output(
+                'powershell -command "(Get-ItemProperty -Path \'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\' -Name CurrentTheme).CurrentTheme | Split-Path -Leaf"',
+                shell=True
+            ).decode().strip().replace(".theme", "")
+        except:
+            theme_name = f"Windows {theme_mode}"
+        
+        return f"Theme: {theme_name} ({theme_mode})"
+    except:
+        return "Theme: Unknown"
+
+def get_icons():
+    """Get icon theme information."""
+    return "Icons: Windows Default"
+
+def get_terminal():
+    """Get terminal information."""
+    try:
+        process_name = subprocess.check_output('powershell -command "Get-Process -Id $PID | Select-Object -ExpandProperty Name"',
+                                             shell=True).decode().strip()
+        
+        if "powershell" in process_name.lower():
+            return "Terminal: Windows PowerShell"
+        elif "cmd" in process_name.lower():
+            return "Terminal: Command Prompt"
+        elif "windowsterminal" in process_name.lower():
+            return "Terminal: Windows Terminal"
+        else:
+            return f"Terminal: {process_name}"
+    except:
+        return "Terminal: Unknown"
+
+def get_font():
+    """Get terminal font information."""
+    try:
+        # For Windows Terminal we could parse the settings.json
+        # This is a simplified approach
+        return "Font: Consolas"
+    except:
+        return "Font: Unknown"
+
 def get_cpu_info():
     """Get CPU information."""
     try:
@@ -125,18 +193,52 @@ def get_cpu_info():
         cores = cores_match.group(1) if cores_match else "?"
         threads = threads_match.group(1) if threads_match else "?"
         
-        return f"CPU: {cpu_name} ({cores}C/{threads}T)"
+        # Try to get CPU frequency
+        try:
+            cpu_freq = psutil.cpu_freq()
+            if cpu_freq and cpu_freq.current:
+                freq = f" @ {cpu_freq.current/1000:.2f}GHz"
+            else:
+                freq = ""
+        except:
+            freq = ""
+        
+        return f"CPU: {cpu_name}{freq} ({cores}C/{threads}T)"
     except:
         return f"CPU: {platform.processor()}"
+
+def get_gpu_info():
+    """Get GPU information."""
+    try:
+        w = wmi.WMI()
+        gpu_info = w.Win32_VideoController()[0]
+        gpu_name = gpu_info.Name
+        
+        # Try to get GPU memory
+        try:
+            gpu_ram = gpu_info.AdapterRAM
+            if gpu_ram and gpu_ram > 0:
+                ram_str = f" ({gpu_ram/(1024**3):.1f}GB)"
+            else:
+                ram_str = ""
+        except:
+            ram_str = ""
+        
+        return f"GPU: {gpu_name}{ram_str}"
+    except:
+        return "GPU: Unknown"
 
 def get_memory_info():
     """Get memory information."""
     mem = psutil.virtual_memory()
     total_gb = mem.total / (1024**3)
     used_gb = mem.used / (1024**3)
-    percent = mem.percent
     
-    return f"Memory: {used_gb:.1f}GB / {total_gb:.1f}GB ({percent}%)"
+    # Format to match the example: 1999MiB / 7690MiB
+    total_mb = int(total_gb * 1024)
+    used_mb = int(used_gb * 1024)
+    
+    return f"Memory: {used_mb}MiB / {total_mb}MiB"
 
 def get_disk_info():
     """Get disk information."""
@@ -162,15 +264,6 @@ def get_disk_info():
     
     return f"Disk: {', '.join(disks[:2])}" + (f" (+{len(disks)-2} more)" if len(disks) > 2 else "")
 
-def get_gpu_info():
-    """Get GPU information."""
-    try:
-        w = wmi.WMI()
-        gpu_info = w.Win32_VideoController()[0]
-        return f"GPU: {gpu_info.Name} ({gpu_info.AdapterRAM/(1024**3):.1f}GB)"
-    except:
-        return "GPU: Unknown"
-
 def get_all_info():
     """Get all system information."""
     return {
@@ -181,8 +274,13 @@ def get_all_info():
         "packages": get_packages(),
         "shell": get_shell(),
         "resolution": get_resolution(),
+        "wm": get_window_manager(),
+        "theme": get_window_theme(),
+        "icons": get_icons(),
+        "terminal": get_terminal(),
+        "font": get_font(),
         "cpu": get_cpu_info(),
+        "gpu": get_gpu_info(),
         "memory": get_memory_info(),
-        "disk": get_disk_info(),
-        "gpu": get_gpu_info()
+        "disk": get_disk_info()
     } 
