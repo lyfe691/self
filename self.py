@@ -34,6 +34,7 @@ def parse_args():
     parser.add_argument("--debug", action="store_true", help="Run in debug mode with simplified output")
     parser.add_argument("--image", help="Use an image (specify name in images folder or path)")
     parser.add_argument("--ascii", help="Use ASCII art (specify name of ASCII art file)")
+    parser.add_argument("--update", action="store_true", help="Update self to the latest version")
     return parser.parse_args()
 
 def load_config(config_path=None):
@@ -408,6 +409,74 @@ def setup_wizard():
     print(f"{Fore.GREEN}Configuration saved to {config_path}{Style.RESET_ALL}")
     print(f"Run self with 'self' or if dev 'python self.py' to see your changes.\n")
 
+def update_self():
+    """Update self to the latest version."""
+    import subprocess
+    import shutil
+    import tempfile
+    import os
+    from colorama import Fore, Style
+    
+    print(f"{Fore.CYAN}Updating self...{Style.RESET_ALL}")
+    
+    # Create a temporary directory for the update
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Clone the latest version from GitHub
+        try:
+            print("Fetching the latest version...")
+            clone_cmd = f"git clone https://github.com/zysenpai/self.git {temp_dir}"
+            
+            # Use subprocess.run to execute the command
+            try:
+                subprocess.run(clone_cmd, shell=True, check=True, capture_output=True)
+            except subprocess.CalledProcessError:
+                print(f"{Fore.RED}Error: Failed to fetch the latest version.{Style.RESET_ALL}")
+                print("Please make sure you have Git installed and you're connected to the internet.")
+                return False
+            
+            # Get the current installation directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # Copy the updated files, preserving user config
+            print("Updating files...")
+            
+            # Preserve user config
+            config_dir = os.path.join(current_dir, "config")
+            cache_dir = os.path.join(current_dir, "cache")
+            images_dir = os.path.join(current_dir, "images")
+            
+            # Copy all files from the temp directory to the current directory
+            # except config, cache, and images folders
+            for item in os.listdir(temp_dir):
+                item_path = os.path.join(temp_dir, item)
+                dest_path = os.path.join(current_dir, item)
+                
+                # Skip config and cache directories to preserve user settings
+                if (item == "config" or item == "cache" or item == "images") and os.path.isdir(item_path):
+                    continue
+                
+                # Remove existing file/directory before copying
+                if os.path.exists(dest_path):
+                    if os.path.isdir(dest_path):
+                        shutil.rmtree(dest_path)
+                    else:
+                        os.remove(dest_path)
+                
+                # Copy file or directory
+                if os.path.isdir(item_path):
+                    shutil.copytree(item_path, dest_path)
+                else:
+                    shutil.copy2(item_path, dest_path)
+            
+            print(f"{Fore.GREEN}Update completed successfully!{Style.RESET_ALL}")
+            print("Run 'self' to use the updated version.")
+            return True
+            
+        except Exception as e:
+            print(f"{Fore.RED}Error during update: {e}{Style.RESET_ALL}")
+            print("Please try again later or download the latest version manually.")
+            return False
+
 def main():
     """Main function."""
     args = parse_args()
@@ -420,6 +489,10 @@ def main():
         setup_wizard()
         return
     
+    if args.update:
+        update_self()
+        return
+        
     # use the debug flag from args
     debug_mode = args.debug
     

@@ -209,7 +209,10 @@ try {
 }
 
 Write-Host ""
-Write-Host "self installed successfully." -ForegroundColor Green
+Write-Host "self installed successfully." -ForegroundColor Cyan
 Write-Host "installation location: $INSTALL_DIR" -ForegroundColor Cyan
-Write-Host "you need to restart your terminal or computer for the PATH changes to take effect." -ForegroundColor Yellow
-Write-Host "close this window, open a new terminal and type 'self'." -ForegroundColor Green 
+Write-Host "you may need to restart your terminal or computer for the PATH changes to take effect." -ForegroundColor Yellow
+Write-Host "close this window, open a new terminal and type 'self'." -ForegroundColor Cyan
+Write-Host "to run the setup, type 'self --setup'" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "To update in the future, run 'self --update'" -ForegroundColor Cyan 
