@@ -13,7 +13,7 @@ A customizable Windows system information display tool inspired by [Neofetch](ht
 ## Install
 
 > [!NOTE]
-> Install via PowerShell. It'll install at user level so no need to run as administrator. If you want it beyond user level just move the folder to `C:\Program Files\Self`.
+> Install via PowerShell. It'll install at user level so no need to run as administrator. If you want it beyond user level (root) just move the folder to `C:\Self`.
 
 ```powershell
 iwr -Uri "https://raw.githubusercontent.com/lyfe691/self/main/install.ps1" -UseBasicParsing | iex
