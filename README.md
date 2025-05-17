@@ -54,7 +54,7 @@ self --debug         # Run in simplified debug mode
 
 ## Screenshots
 
-<img src="https://raw.githubusercontent.com/lyfe691/self/main/docs/self.png" width="80%" alt="self screenshot">
+<img src="https://raw.githubusercontent.com/lyfe691/self/refs/heads/main/docs/images/self.png" width="80%" alt="self screenshot">
 
 ## License
 
