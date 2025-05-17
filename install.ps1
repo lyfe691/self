@@ -30,35 +30,88 @@ foreach ($file in $FILES) {
 # Download directories
 Write-Host "Downloading additional resources..."
 
-# Function to download files from filelist.txt
-function Download-Files-From-List {
+# Function to download directory contents from GitHub
+function Download-Directory-Contents {
     param (
-        [string]$Directory,
-        [string]$FilePath
+        [string]$Directory
     )
     
+    Write-Host "Downloading $Directory files..."
+    
     try {
-        Invoke-WebRequest -Uri "$RAW_URL/$Directory/filelist.txt" -OutFile "$INSTALL_DIR\$Directory\filelist.txt" -ErrorAction SilentlyContinue
-        if (Test-Path "$INSTALL_DIR\$Directory\filelist.txt") {
-            foreach ($line in Get-Content "$INSTALL_DIR\$Directory\filelist.txt") {
-                if (-not [string]::IsNullOrWhiteSpace($line)) {
+        # First try to get the filelist.txt which contains all files in the directory
+        $filelistUrl = "$RAW_URL/$Directory/filelist.txt"
+        $filelistResponse = Invoke-WebRequest -Uri $filelistUrl -ErrorAction SilentlyContinue
+        
+        if ($filelistResponse.StatusCode -eq 200) {
+            # Parse the filelist and download each file
+            $files = $filelistResponse.Content -split "`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+            
+            foreach ($file in $files) {
+                $file = $file.Trim()
+                try {
+                    Write-Host "  Downloading $Directory/$file"
+                    Invoke-WebRequest -Uri "$RAW_URL/$Directory/$file" -OutFile "$INSTALL_DIR\$Directory\$file" -ErrorAction Stop
+                } catch {
+                    Write-Host "  Warning: Could not download $file" -ForegroundColor Yellow
+                }
+            }
+        } else {
+            # Fallback: Try to download some common files if filelist.txt doesn't exist
+            Write-Host "  No filelist found. Trying common file patterns..." -ForegroundColor Yellow
+            
+            # Try common image formats for images directory
+            if ($Directory -eq "images") {
+                $extensions = @(".png", ".jpg", ".jpeg", ".gif")
+                $baseNames = @("logo", "background", "icon", "default", "system")
+                
+                foreach ($baseName in $baseNames) {
+                    foreach ($ext in $extensions) {
+                        $fileName = "$baseName$ext"
+                        try {
+                            Invoke-WebRequest -Uri "$RAW_URL/$Directory/$fileName" -OutFile "$INSTALL_DIR\$Directory\$fileName" -ErrorAction SilentlyContinue
+                        } catch {
+                            # Silently continue if file doesn't exist
+                        }
+                    }
+                }
+            }
+            
+            # Try common ASCII art files
+            if ($Directory -eq "ascii") {
+                $artFiles = @("logo.txt", "banner.txt", "welcome.txt", "computer.txt")
+                
+                foreach ($file in $artFiles) {
                     try {
-                        Invoke-WebRequest -Uri "$RAW_URL/$Directory/$line" -OutFile "$INSTALL_DIR\$Directory\$line" -ErrorAction SilentlyContinue
+                        Invoke-WebRequest -Uri "$RAW_URL/$Directory/$file" -OutFile "$INSTALL_DIR\$Directory\$file" -ErrorAction SilentlyContinue
                     } catch {
-                        Write-Host "Warning: Could not download $line" -ForegroundColor Yellow
+                        # Silently continue if file doesn't exist
+                    }
+                }
+            }
+            
+            # Try common config files
+            if ($Directory -eq "config") {
+                $configFiles = @("default.json", "settings.json", "config.json", "themes.json")
+                
+                foreach ($file in $configFiles) {
+                    try {
+                        Invoke-WebRequest -Uri "$RAW_URL/$Directory/$file" -OutFile "$INSTALL_DIR\$Directory\$file" -ErrorAction SilentlyContinue
+                    } catch {
+                        # Silently continue if file doesn't exist
                     }
                 }
             }
         }
     } catch {
-        Write-Host "Warning: Could not download files for $Directory" -ForegroundColor Yellow
+        Write-Host "  Warning: Could not download files for $Directory" -ForegroundColor Yellow
     }
 }
 
 # Download files from each directory
-Download-Files-From-List -Directory "ascii"
-Download-Files-From-List -Directory "config"
-Download-Files-From-List -Directory "images"
+Download-Directory-Contents -Directory "ascii"
+Download-Directory-Contents -Directory "config"
+Download-Directory-Contents -Directory "images"
 
 # Create batch file
 Write-Host "Creating launcher..."
