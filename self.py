@@ -48,7 +48,8 @@ def load_config(config_path=None):
         print(f"config file not found: {config_path}")
         print("using default configuration.")
         return {
-            "display_type": "image",  # image or ascii
+            "display_type": "image",  # image, braille, or ascii
+            "render_mode": "block",   # block or braille (only used for image display type)
             "image": "rei.jpg",  # default image
             "ascii_art": "windows",  # default ascii art
             "theme": "blue",  # default theme
@@ -181,11 +182,13 @@ def display_self(display_type, art_source, system_info, config, execution_time=N
     image_height = config.get("image_height", 20)
     image_width = config.get("image_width", None)
     
-    if display_type == "image":
+    if display_type == "image" or display_type == "braille":
         image_path = get_image_path(art_source)
         if image_path:
-            # render image directly without sharpening
-            left_content = image_to_ansi(image_path, height=image_height, width=image_width)
+            # Get the render mode
+            render_mode = "braille" if display_type == "braille" else config.get("render_mode", "block")
+            # render image with specified mode
+            left_content = image_to_ansi(image_path, height=image_height, width=image_width, render_mode=render_mode)
         else:
             # fallback to ascii if image not found
             left_content = load_ascii_art("windows").split('\n')
@@ -231,6 +234,11 @@ def display_self(display_type, art_source, system_info, config, execution_time=N
         info_lines.append("")
         info_lines.append(f"{theme['label']}Executed in{Style.RESET_ALL} {execution_time:.2f}s")
     
+    # add empty line and color blocks at the end of info lines
+    info_lines.append("")  # empty line
+    color_blocks = create_color_blocks(theme)
+    info_lines.append(color_blocks)
+    
     # measure height of both columns
     left_height = len(left_content)
     info_height = len(info_lines)
@@ -267,10 +275,7 @@ def display_self(display_type, art_source, system_info, config, execution_time=N
         # print the info text
         print(info_line)
     
-    # add color blocks at the bottom
-    print()
-    color_blocks = create_color_blocks(theme)
-    print(f"{' ' * 2}{color_blocks}")
+    # add final newline
     print()
 
 def strip_ansi(text):
@@ -294,14 +299,23 @@ def setup_wizard():
     
     # Display type
     print(f"{Fore.YELLOW}Display Type:{Style.RESET_ALL}")
-    print("1. Image (recommended)")
-    print("2. ASCII Art")
-    choice = input("Choose [1/2] (default: 1): ").strip() or "1"
-    config["display_type"] = "image" if choice == "1" else "ascii"
+    print("1. Image with Blocks (half-blocks ▀)")
+    print("2. Image with Braille (⠿)")
+    print("3. ASCII Art")
+    choice = input("Choose [1/2/3] (default: 1): ").strip() or "1"
+    
+    if choice == "1":
+        config["display_type"] = "image"
+        config["render_mode"] = "block"
+    elif choice == "2":
+        config["display_type"] = "braille"
+        config["render_mode"] = "braille"
+    else:
+        config["display_type"] = "ascii"
     print()
     
-    # Image selection
-    if config["display_type"] == "image":
+    # Image selection (for both block and braille display types)
+    if config["display_type"] == "image" or config["display_type"] == "braille":
         # List available images
         images = image_handler.list_available_images()
         if images:
@@ -360,7 +374,7 @@ def setup_wizard():
     print()
     
     # Image height
-    if config["display_type"] == "image":
+    if config["display_type"] == "image" or config["display_type"] == "braille":
         print(f"{Fore.YELLOW}Image Height:{Style.RESET_ALL}")
         print("Recommended: 18-25 for best results")
         height_choice = input("Enter image height (default: 20): ").strip()
