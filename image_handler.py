@@ -103,23 +103,23 @@ def pixel_to_braille(pixels):
     # The base braille character (⠀) is U+2800 (empty braille)
     # Each raised dot adds a specific value to this base
     
-    # Initialize with empty braille
+    # initialize with empty braille
     value = 0
     
-    # Each bit position corresponds to a specific power of 2
+    # each bit position corresponds to a specific power of 2
     bit_values = [1, 2, 4, 8, 16, 32, 64, 128]
     
-    # Check each pixel in the grid and set the corresponding bit if the pixel is "on"
-    threshold = 127  # Threshold for considering a pixel "on"
+    # check each pixel in the grid and set the corresponding bit if the pixel is "on"
+    threshold = 127  # threshold for considering a pixel "on"
     
-    # Map pixel positions to bit positions in braille
+    # map pixel positions to bit positions in braille
     # [0, 0] -> 0, [1, 0] -> 3, [0, 1] -> 1, [1, 1] -> 4, etc.
     pixel_to_bit_map = [
         [(0, 0), (0, 1), (0, 2), (0, 3)],  # Left column
         [(1, 0), (1, 1), (1, 2), (1, 3)]   # Right column
     ]
     
-    # Map (col, row) to bit position
+    # map (col, row) to bit position
     bit_position_map = {
         (0, 0): 0, (1, 0): 3,
         (0, 1): 1, (1, 1): 4,
@@ -127,20 +127,20 @@ def pixel_to_braille(pixels):
         (0, 3): 6, (1, 3): 7
     }
     
-    # Set bits based on pixel intensity
+    # set bits based on pixel intensity
     for col in range(2):
         for row in range(4):
             x, y = pixel_to_bit_map[col][row]
-            if x < len(pixels[0]) and y < len(pixels):  # Ensure we're within bounds
-                if pixels[y][x] < threshold:  # If the pixel is "on" (darker than threshold)
+            if x < len(pixels[0]) and y < len(pixels):  # ensure we're within bounds
+                if pixels[y][x] < threshold:  # if the pixel is "on" (darker than threshold)
                     bit_pos = bit_position_map[(col, row)]
                     value |= bit_values[bit_pos]
     
-    # Convert to braille character
+    # convert to braille character
     return chr(0x2800 + value)
 
 def image_to_ansi_block(image_path, height=20, width=None):
-    """Render image using block characters (original method)"""
+    """render image using block characters (original method)"""
     # try to use cached rendered image if available
     cache_path = _get_cached_image_path(image_path, height, width, "block")
     if cache_path:
@@ -243,15 +243,15 @@ def image_to_ansi_braille(image_path, height=20, width=None):
     
     terminal_width, terminal_height = get_terminal_size()
     
-    # Adjust width for braille characters (each is 2×4 pixels)
+    # adjust width for braille characters (each is 2×4 pixels)
     is_square = (width is not None and height == width)
     if is_square:
         width = width * 2
     
     max_width = width if width is not None else int(terminal_width * 0.4)
     
-    # For braille, each character represents a 2×4 grid of pixels
-    # Adjust height and width accordingly
+    # for braille, each character represents a 2×4 grid of pixels
+    # adjust height and width accordingly
     effective_height = height * 4
     effective_width = width * 2 if width is not None else None
     
@@ -269,24 +269,24 @@ def image_to_ansi_braille(image_path, height=20, width=None):
         img = resize_image(image_path, target_height=new_height, target_width=max_width * 2)
         img_width, img_height = img.size
     
-    # Convert to grayscale for braille mapping
+    # convert to grayscale for braille mapping
     img_gray = img.convert('L')
-    # Keep color image for coloring
+    # keep color image for coloring
     if img.mode != 'RGB':
         img = img.convert('RGB')
     
     lines = []
     
-    # Process in 2×4 pixel blocks (the size of a braille character)
+    # process in 2×4 pixel blocks (the size of a braille character)
     if HAS_NUMPY:
-        # Convert to numpy arrays for faster processing
+        # convert to numpy arrays for faster processing
         gray_pixels = np.array(img_gray)
         color_pixels = np.array(img)
         
         for y in range(0, img_height, 4):
             line = ""
             for x in range(0, img_width, 2):
-                # Extract a 2×4 block of pixels for braille mapping
+                # extract a 2×4 block of pixels for braille mapping
                 block = []
                 for by in range(4):
                     row = []
@@ -295,10 +295,10 @@ def image_to_ansi_braille(image_path, height=20, width=None):
                         if py < img_height and px < img_width:
                             row.append(gray_pixels[py, px])
                         else:
-                            row.append(255)  # White (empty) for out-of-bounds
+                            row.append(255)  # white (empty) for out of bounds
                     block.append(row)
                 
-                # Get average color for the block
+                # get average color for the block
                 r_sum, g_sum, b_sum = 0, 0, 0
                 count = 0
                 for by in range(min(4, img_height - y)):
@@ -314,25 +314,25 @@ def image_to_ansi_braille(image_path, height=20, width=None):
                     g_avg = g_sum // count
                     b_avg = b_sum // count
                 else:
-                    r_avg, g_avg, b_avg = 255, 255, 255  # White for empty blocks
+                    r_avg, g_avg, b_avg = 255, 255, 255  # white for empty blocks
                 
-                # Generate braille character
+                # generate braille character
                 braille_char = pixel_to_braille(block)
                 
-                # Add colored braille character to the line
+                # add colored braille character to the line
                 line += f"{rgb_to_ansi(r_avg, g_avg, b_avg)}{braille_char}{RESET}"
             
-            if line:  # Only add non-empty lines
+            if line:  # only add non-empty lines
                 lines.append(line)
     else:
-        # Fallback using PIL
+        # fallback using PIL
         gray_pixels = img_gray.load()
         color_pixels = img.load()
         
         for y in range(0, img_height, 4):
             line = ""
             for x in range(0, img_width, 2):
-                # Extract a 2×4 block of pixels for braille mapping
+                # extract a 2×4 block of pixels for braille mapping
                 block = []
                 for by in range(4):
                     row = []
@@ -341,10 +341,10 @@ def image_to_ansi_braille(image_path, height=20, width=None):
                         if py < img_height and px < img_width:
                             row.append(gray_pixels[px, py])
                         else:
-                            row.append(255)  # White (empty) for out-of-bounds
+                            row.append(255)  # white (empty) for out of bounds
                     block.append(row)
                 
-                # Get average color for the block
+                # get average color for the block
                 r_sum, g_sum, b_sum = 0, 0, 0
                 count = 0
                 for by in range(min(4, img_height - y)):
@@ -361,18 +361,18 @@ def image_to_ansi_braille(image_path, height=20, width=None):
                     g_avg = g_sum // count
                     b_avg = b_sum // count
                 else:
-                    r_avg, g_avg, b_avg = 255, 255, 255  # White for empty blocks
+                    r_avg, g_avg, b_avg = 255, 255, 255  # white for empty blocks
                 
-                # Generate braille character
+                # generate braille character
                 braille_char = pixel_to_braille(block)
                 
-                # Add colored braille character to the line
+                # add colored braille character to the line
                 line += f"{rgb_to_ansi(r_avg, g_avg, b_avg)}{braille_char}{RESET}"
             
-            if line:  # Only add non-empty lines
+            if line:  # only add non-empty lines
                 lines.append(line)
     
-    # Save to cache for future use
+    # save to cache for future use
     _save_image_cache(image_path, height, width, lines, "braille")
     
     return lines

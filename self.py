@@ -419,14 +419,14 @@ def update_self():
     
     print(f"{Fore.CYAN}Updating self...{Style.RESET_ALL}")
     
-    # Create a temporary directory for the update
+    # create a temporary directory for the update
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Clone the latest version from GitHub
+        # clone the latest version from GitHub
         try:
             print("Fetching the latest version...")
-            clone_cmd = f"git clone https://github.com/zysenpai/self.git {temp_dir}"
+            clone_cmd = f"git clone https://github.com/lyfe691/self.git {temp_dir}"
             
-            # Use subprocess.run to execute the command
+            # use subprocess.run to execute the command
             try:
                 subprocess.run(clone_cmd, shell=True, check=True, capture_output=True)
             except subprocess.CalledProcessError:
@@ -434,35 +434,33 @@ def update_self():
                 print("Please make sure you have Git installed and you're connected to the internet.")
                 return False
             
-            # Get the current installation directory
+            # get the current installation directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
             
-            # Copy the updated files, preserving user config
-            print("Updating files...")
+            # copy the updated files, preserving user config
+            print("updating files...")
             
-            # Preserve user config
+            # preserve user config
             config_dir = os.path.join(current_dir, "config")
             cache_dir = os.path.join(current_dir, "cache")
             images_dir = os.path.join(current_dir, "images")
-            
-            # Copy all files from the temp directory to the current directory
-            # except config, cache, and images folders
+
             for item in os.listdir(temp_dir):
                 item_path = os.path.join(temp_dir, item)
                 dest_path = os.path.join(current_dir, item)
                 
-                # Skip config and cache directories to preserve user settings
+                # skip config and cache directories to preserve user settings
                 if (item == "config" or item == "cache" or item == "images") and os.path.isdir(item_path):
                     continue
                 
-                # Remove existing file/directory before copying
+                # remove existing file/directory before copying
                 if os.path.exists(dest_path):
                     if os.path.isdir(dest_path):
                         shutil.rmtree(dest_path)
                     else:
                         os.remove(dest_path)
                 
-                # Copy file or directory
+                # copy file or directory
                 if os.path.isdir(item_path):
                     shutil.copytree(item_path, dest_path)
                 else:
